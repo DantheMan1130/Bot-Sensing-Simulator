@@ -1,0 +1,108 @@
+# Python (sense_test.py)
+from sense_hat import SenseHat
+sense = SenseHat()
+
+import RPi.GPIO as gpio
+import time
+import os
+import signal
+
+gpio.setmode(gpio.BOARD)
+
+gpio.setup(11, gpio.OUT)
+gpio.setup(13, gpio.OUT)
+gpio.setup(29, gpio.OUT)
+gpio.setup(31, gpio.OUT)
+
+pid = os.fork()
+
+R = [255, 0, 0]
+pixel_list = [R, R, R, R, R, R, R, R,
+              R, R, R, R, R, R, R, R,
+              R, R, R, R, R, R, R, R,
+              R, R, R, R, R, R, R, R,
+              R, R, R, R, R, R, R, R,
+              R, R, R, R, R, R, R, R,
+              R, R, R, R, R, R, R, R,
+              R, R, R, R, R, R, R, R]
+            
+while True:
+    if pid == 0:
+        gpio.output(11, True)
+        gpio.output(13, False)
+        gpio.output(29, False)
+        gpio.output(31, True)
+        time.sleep(1.0)
+        """
+        gpio.output(11, True)
+        gpio.output(13, True)
+        gpio.output(29, True)
+        gpio.output(31, True)
+        time.sleep(1.0)
+        """
+        gpio.output(11, True)
+        gpio.output(13, True)
+        gpio.output(29, False)
+        gpio.output(31, True)
+        time.sleep(0.7)
+        """
+        gpio.output(11, True)
+        gpio.output(13, True)
+        gpio.output(29, True)
+        gpio.output(31, True)
+        time.sleep(1.0)
+        """
+    else:
+        t = sense.get_temperature_from_humidity()
+        t = round(t, 1)
+        msg = "Temp: %s" % (t)
+        sense.show_message(msg)
+        if t > 29.0:
+            sense.set_pixels(pixel_list)
+            gpio.output(11, True)
+            gpio.output(13, True)
+            gpio.output(29, True)
+            gpio.output(31, True)
+            time.sleep(1.0)
+            os.kill(pid, signal.SIGKILL)
+
+# Bot controls
+"""
+# Forward
+gpio.output(11, True)
+gpio.output(13, False)
+gpio.output(29, False)
+gpio.output(31, True)
+time.sleep(2.0)
+
+# Left
+gpio.output(11, True)
+gpio.output(13, True)
+gpio.output(29, False)
+gpio.output(31, True)
+time.sleep(0.5)
+
+# Backward
+gpio.output(11, False)
+gpio.output(13, True)
+gpio.output(29, True)
+gpio.output(31, False)
+time.sleep(1.0)
+
+# Right
+gpio.output(11, True)
+gpio.output(13, False)
+gpio.output(29, True)
+gpio.output(31, True)
+time.sleep(0.5)
+
+# Stop
+gpio.output(11, True)
+gpio.output(13, True)
+gpio.output(29, True)
+gpio.output(31, True)
+time.sleep(1.0)
+"""
+
+gpio.cleanup()
+sense.clear()
